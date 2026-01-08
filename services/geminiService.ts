@@ -1,9 +1,20 @@
 
 import { GoogleGenAI, Modality } from "@google/genai";
-import { GameMode, ProgressData } from "../types";
+import { GameMode } from "../types";
+
+const getAIClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.warn("API_KEY is missing. AI features will be disabled.");
+    return null;
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 export const getAiFeedback = async (score: number, total: number, selectedTable: number, mode: GameMode) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getAIClient();
+  if (!ai) return getDefaultFeedback(score, total);
+
   const modeText = mode === GameMode.MULTIPLICATION ? "nhân" : "chia";
   
   const prompt = `Bạn là một cô giáo tiểu học hiền hậu và yêu trẻ tên là "Cô Linh". 
@@ -22,38 +33,23 @@ export const getAiFeedback = async (score: number, total: number, selectedTable:
         topP: 0.95,
       },
     });
-    return response.text?.replace(/[*#_~]/g, '') || "";
+    return response.text?.replace(/[*#_~]/g, '') || getDefaultFeedback(score, total);
   } catch (error) {
     console.error("Gemini Error:", error);
-    return score === total ? "Giỏi quá! Em đã hoàn thành xuất sắc bài học hôm nay! Chúc mừng em nhé." : "Cố gắng lên nào, cô tin là lần sau em sẽ làm tốt hơn đấy!";
+    return getDefaultFeedback(score, total);
   }
 };
 
-export const getImprovementSuggestions = async (progress: ProgressData) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
-  const learnedCount = progress.multiplication.length + progress.division.length;
-  const bestScores = progress.quizHistory.map(h => `${h.mode === GameMode.MULTIPLICATION ? 'Nhân' : 'Chia'} ${h.table}: ${h.bestScore}/10`).join(', ');
-  
-  const prompt = `Bạn là Cô Linh, cô giáo dạy toán tiểu học. Dựa trên thông tin học tập của bé:
-  - Tổng số bảng đã học xong: ${learnedCount}/16
-  - Kết quả tốt nhất ở các bảng đã làm bài: ${bestScores || 'Chưa làm bài nào'}
-  Hãy đưa ra 3 lời khuyên ngắn gọn cho bé (ví dụ: cần luyện thêm bảng nào, khen ngợi bảng nào giỏi). 
-  Dùng ngôn ngữ thân thiện, có emoji. KHÔNG dùng định dạng Markdown (*, #). Trả lời tiếng Việt.`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-    });
-    return response.text?.replace(/[*#_~]/g, '') || "Em hãy tiếp tục cố gắng luyện tập mỗi ngày nhé!";
-  } catch (error) {
-    return "Em hãy học thêm các bảng mới và ôn tập lại những bảng chưa đạt điểm cao nhé!";
-  }
+const getDefaultFeedback = (score: number, total: number) => {
+  if (score === total) return "Giỏi quá! Em đã hoàn thành xuất sắc bài học hôm nay! Chúc mừng em nhé. 🎉";
+  if (score >= total * 0.8) return "Em làm rất tốt, chỉ sai một chút xíu thôi. Cố gắng lên nhé! 🌟";
+  return "Em đã rất cố gắng rồi. Hãy ôn lại bài một chút và thử lại nhé, cô tin em sẽ làm được! 💪";
 };
 
 export const generateSpeech = async (text: string) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getAIClient();
+  if (!ai) return null;
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
@@ -68,8 +64,7 @@ export const generateSpeech = async (text: string) => {
       },
     });
 
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    return base64Audio;
+    return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || null;
   } catch (error) {
     console.error("TTS Error:", error);
     return null;
