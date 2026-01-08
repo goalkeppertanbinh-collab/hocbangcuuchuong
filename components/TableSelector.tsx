@@ -8,9 +8,10 @@ import { getProgress } from '../utils/storage';
 interface TableSelectorProps {
   onSelectLearn: (table: number, mode: GameMode) => void;
   onSelectQuiz: (table: number, mode: GameMode) => void;
+  onSelectMultiplayer: (table: number, mode: GameMode) => void;
 }
 
-const TableSelector: React.FC<TableSelectorProps> = ({ onSelectLearn, onSelectQuiz }) => {
+const TableSelector: React.FC<TableSelectorProps> = ({ onSelectLearn, onSelectQuiz, onSelectMultiplayer }) => {
   const [activeMode, setActiveMode] = useState<GameMode>(GameMode.MULTIPLICATION);
   // Ensure initial state matches ProgressData interface
   const [progress, setProgress] = useState<ProgressData>({ multiplication: [], division: [], quizHistory: [] });
@@ -91,6 +92,12 @@ const TableSelector: React.FC<TableSelectorProps> = ({ onSelectLearn, onSelectQu
                   }`}
                 >
                   Thử thách 🏆
+                </button>
+                <button 
+                  onClick={() => onSelectMultiplayer(num, activeMode)}
+                  className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded-xl transition-colors shadow-sm text-sm flex items-center justify-center gap-1"
+                >
+                  Thi đấu ⚔️
                 </button>
               </div>
             </div>

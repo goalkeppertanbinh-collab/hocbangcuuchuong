@@ -4,7 +4,9 @@ export enum GameState {
   LEARN = 'LEARN',
   QUIZ = 'QUIZ',
   RESULT = 'RESULT',
-  STATS = 'STATS'
+  STATS = 'STATS',
+  MULTIPLAYER_QUIZ = 'MULTIPLAYER_QUIZ',
+  MULTIPLAYER_RESULT = 'MULTIPLAYER_RESULT'
 }
 
 export enum GameMode {
@@ -25,6 +27,12 @@ export interface QuizResult {
   score: number;
   total: number;
   wrongAnswers: Question[];
+}
+
+export interface MultiplayerResult {
+  p1Score: number;
+  p2Score: number;
+  total: number;
 }
 
 export interface TableStats {
