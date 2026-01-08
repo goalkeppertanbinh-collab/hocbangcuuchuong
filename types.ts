@@ -5,6 +5,7 @@ export enum GameState {
   QUIZ = 'QUIZ',
   RESULT = 'RESULT',
   STATS = 'STATS',
+  STICKERS = 'STICKERS',
   MULTIPLAYER_SETUP = 'MULTIPLAYER_SETUP',
   MULTIPLAYER_QUIZ = 'MULTIPLAYER_QUIZ',
   MULTIPLAYER_RESULT = 'MULTIPLAYER_RESULT'
@@ -28,6 +29,7 @@ export interface QuizResult {
   score: number;
   total: number;
   wrongAnswers: Question[];
+  earnedSticker?: string;
 }
 
 export interface MultiplayerResult {
@@ -46,7 +48,8 @@ export interface TableStats {
 }
 
 export interface ProgressData {
-  multiplication: number[]; // Tables marked as "learned"
+  multiplication: number[];
   division: number[];
   quizHistory: TableStats[];
+  stickers: string[]; // Danh sách các emoji/id sticker đã thu thập
 }

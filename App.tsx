@@ -10,6 +10,7 @@ import StatsView from './components/StatsView';
 import MultiplayerQuiz from './components/MultiplayerQuiz';
 import MultiplayerResult from './components/MultiplayerResult';
 import MultiplayerSetup from './components/MultiplayerSetup';
+import StickerBook from './components/StickerBook';
 
 const App: React.FC = () => {
   const [state, setState] = useState<GameState>(GameState.HOME);
@@ -62,6 +63,10 @@ const App: React.FC = () => {
     setState(GameState.STATS);
   };
 
+  const showStickers = () => {
+    setState(GameState.STICKERS);
+  };
+
   return (
     <div className="min-h-screen bg-sky-50 flex flex-col items-center p-4 md:p-8">
       <div className="max-w-4xl w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col border-4 border-white">
@@ -77,6 +82,7 @@ const App: React.FC = () => {
               onSelectLearn={startLearning} 
               onSelectQuiz={startQuiz} 
               onSelectMultiplayer={setupMultiplayer} 
+              onOpenStickers={showStickers}
             />
           )}
 
@@ -138,10 +144,14 @@ const App: React.FC = () => {
           {state === GameState.STATS && (
             <StatsView onBack={goHome} />
           )}
+
+          {state === GameState.STICKERS && (
+            <StickerBook onBack={goHome} />
+          )}
         </main>
         
         <footer className="p-4 bg-sky-100 text-center text-sky-600 font-medium text-sm">
-          © 2026 Cô Linh
+          © 2026 Cô Linh - Đồng hành cùng bé yêu Toán
         </footer>
       </div>
     </div>

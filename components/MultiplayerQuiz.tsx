@@ -71,7 +71,17 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({ table, mode, timeLimi
     setShowFeedback({ player: 0, correct: false, timeOut: true });
     setDisabledButtons(true);
     setTimeout(() => {
-      proceedNext();
+      if (currentIdx < questions.length - 1) {
+        setCurrentIdx(prev => prev + 1);
+        setShowFeedback(null);
+        setDisabledButtons(false);
+      } else {
+        onFinish({
+          p1Score,
+          p2Score,
+          total: questions.length
+        });
+      }
     }, 1500);
   };
 
@@ -82,12 +92,25 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({ table, mode, timeLimi
     
     if (isCorrect) {
       setShowFeedback({ player, correct: true });
-      if (player === 1) setP1Score(prev => prev + 1);
-      else setP2Score(prev => prev + 1);
+      const nextP1 = player === 1 ? p1Score + 1 : p1Score;
+      const nextP2 = player === 2 ? p2Score + 1 : p2Score;
+
+      if (player === 1) setP1Score(nextP1);
+      else setP2Score(nextP2);
       
       setDisabledButtons(true);
       setTimeout(() => {
-        proceedNext();
+        if (currentIdx < questions.length - 1) {
+          setCurrentIdx(prev => prev + 1);
+          setShowFeedback(null);
+          setDisabledButtons(false);
+        } else {
+          onFinish({
+            p1Score: nextP1,
+            p2Score: nextP2,
+            total: questions.length
+          });
+        }
       }, 1000);
     } else {
       setShowFeedback({ player, correct: false });
@@ -96,20 +119,6 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({ table, mode, timeLimi
         setShowFeedback(null);
         setDisabledButtons(false);
       }, 800);
-    }
-  };
-
-  const proceedNext = () => {
-    setShowFeedback(null);
-    setDisabledButtons(false);
-    if (currentIdx < questions.length - 1) {
-      setCurrentIdx(prev => prev + 1);
-    } else {
-      onFinish({
-        p1Score,
-        p2Score,
-        total: questions.length
-      });
     }
   };
 
@@ -156,7 +165,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({ table, mode, timeLimi
               ? `${currentQuestion.multiplier1 * currentQuestion.multiplier2} : ${currentQuestion.multiplier1} = ?`
               : `${currentQuestion.multiplier1} x ${currentQuestion.multiplier2} = ?`}
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full max-w-sm mx-auto">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full max-sm:px-2 max-w-sm mx-auto">
             {currentQuestion.options.map((opt) => (
               <button
                 key={`p1-${opt}`}
@@ -187,7 +196,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({ table, mode, timeLimi
               ? `${currentQuestion.multiplier1 * currentQuestion.multiplier2} : ${currentQuestion.multiplier1} = ?`
               : `${currentQuestion.multiplier1} x ${currentQuestion.multiplier2} = ?`}
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full max-w-sm mx-auto">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full max-sm:px-2 max-w-sm mx-auto">
             {currentQuestion.options.map((opt) => (
               <button
                 key={`p2-${opt}`}

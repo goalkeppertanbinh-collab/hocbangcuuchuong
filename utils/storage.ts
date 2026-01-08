@@ -1,21 +1,21 @@
 
 import { GameMode, ProgressData, TableStats } from '../types';
 
-const STORAGE_KEY = 'math_adventure_progress_v1';
+const STORAGE_KEY = 'math_adventure_progress_v2';
 
 export const getProgress = (): ProgressData => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const data = JSON.parse(stored);
-      // Đảm bảo có quizHistory
       if (!data.quizHistory) data.quizHistory = [];
+      if (!data.stickers) data.stickers = [];
       return data;
     }
   } catch (e) {
-    console.error("Lỗi khi đọc progress từ localStorage", e);
+    console.error("Lỗi khi đọc progress", e);
   }
-  return { multiplication: [], division: [], quizHistory: [] };
+  return { multiplication: [], division: [], quizHistory: [], stickers: [] };
 };
 
 export const saveProgress = (table: number, mode: GameMode) => {
@@ -24,6 +24,14 @@ export const saveProgress = (table: number, mode: GameMode) => {
   
   if (!progress[key].includes(table)) {
     progress[key].push(table);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  }
+};
+
+export const saveSticker = (sticker: string) => {
+  const progress = getProgress();
+  if (!progress.stickers.includes(sticker)) {
+    progress.stickers.push(sticker);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
   }
 };
@@ -50,8 +58,4 @@ export const saveQuizAttempt = (table: number, mode: GameMode, score: number) =>
   }
   
   localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-};
-
-export const clearProgress = () => {
-  localStorage.removeItem(STORAGE_KEY);
 };

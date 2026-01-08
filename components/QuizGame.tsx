@@ -14,7 +14,7 @@ const QuizGame: React.FC<QuizGameProps> = ({ table, mode, onFinish, onQuit }) =>
   const [score, setScore] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState<Question[]>([]);
   const [showFeedback, setShowFeedback] = useState<boolean | null>(null);
-  const [attempts, setAttempts] = useState(0); // 0 = first try, 1 = second try
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [shake, setShake] = useState(false);
 
   const questions = useMemo(() => {
@@ -51,50 +51,46 @@ const QuizGame: React.FC<QuizGameProps> = ({ table, mode, onFinish, onQuit }) =>
     if (showFeedback !== null) return;
 
     const isCorrect = selected === currentQuestion.answer;
+    setSelectedOption(selected);
+    setShowFeedback(isCorrect);
     
     if (isCorrect) {
-      setShowFeedback(true);
-      if (attempts === 0) {
-        setScore(prev => prev + 1);
-      }
+      const newScore = score + 1;
+      setScore(newScore);
       
       setTimeout(() => {
-        proceedNext();
+        proceedNext(newScore, wrongAnswers);
       }, 1000);
     } else {
-      if (attempts === 0) {
-        // First mistake: allow retry
-        setShake(true);
-        setTimeout(() => setShake(false), 500);
-        setAttempts(1);
-        // We don't set feedback to true/false globally yet to keep buttons interactive
-      } else {
-        // Second mistake: show feedback and proceed
-        setShowFeedback(false);
-        setWrongAnswers(prev => [...prev, currentQuestion]);
-        setTimeout(() => {
-          proceedNext();
-        }, 1500);
-      }
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      
+      const newWrongAnswers = [...wrongAnswers, currentQuestion];
+      setWrongAnswers(newWrongAnswers);
+      
+      // Hiện đáp án đúng trong 1.5 giây để bé học lại
+      setTimeout(() => {
+        proceedNext(score, newWrongAnswers);
+      }, 1500);
     }
   };
 
-  const proceedNext = () => {
-    setShowFeedback(null);
-    setAttempts(0);
+  const proceedNext = (currentScore: number, currentWrongs: Question[]) => {
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(prev => prev + 1);
+      setShowFeedback(null);
+      setSelectedOption(null);
     } else {
       onFinish({
-        score: score,
+        score: currentScore,
         total: questions.length,
-        wrongAnswers: wrongAnswers.includes(currentQuestion) ? wrongAnswers : (showFeedback === false ? [...wrongAnswers, currentQuestion] : wrongAnswers)
+        wrongAnswers: currentWrongs
       });
     }
   };
 
   const isDiv = mode === GameMode.DIVISION;
-  const progress = ((currentIdx) / questions.length) * 100;
+  const progress = (currentIdx / questions.length) * 100;
 
   return (
     <div className="space-y-10 animate-in zoom-in duration-300">
@@ -124,32 +120,39 @@ const QuizGame: React.FC<QuizGameProps> = ({ table, mode, onFinish, onQuit }) =>
               ? `${currentQuestion.multiplier1 * currentQuestion.multiplier2} : ${currentQuestion.multiplier1} = ?`
               : `${currentQuestion.multiplier1} x ${currentQuestion.multiplier2} = ?`}
           </div>
-          
-          {attempts === 1 && showFeedback === null && (
-            <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-bold animate-pulse inline-block">
-              ⚠️ Tiếc quá, em hãy thử chọn lại một lần nữa nhé!
-            </div>
-          )}
         </div>
 
         <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
-          {currentQuestion.options.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => handleAnswer(opt)}
-              disabled={showFeedback !== null}
-              className={`
-                text-3xl font-bold py-8 rounded-[2rem] shadow-md transition-all transform active:scale-95
-                ${showFeedback === null ? 'bg-white text-gray-600 border-4 border-gray-100 hover:border-sky-300' : ''}
-                ${showFeedback === true && opt === currentQuestion.answer ? 'bg-green-500 text-white border-green-600' : ''}
-                ${showFeedback === false && opt === currentQuestion.answer ? 'bg-green-500 text-white border-green-600 animate-pulse' : ''}
-                ${showFeedback === false && opt !== currentQuestion.answer ? 'bg-red-400 text-white border-red-500 opacity-50' : ''}
-                ${showFeedback !== null && opt !== currentQuestion.answer && showFeedback === true ? 'opacity-50' : ''}
-              `}
-            >
-              {opt}
-            </button>
-          ))}
+          {currentQuestion.options.map((opt) => {
+            const isSelected = selectedOption === opt;
+            const isCorrectAnswer = opt === currentQuestion.answer;
+            
+            let btnClass = 'bg-white text-gray-600 border-4 border-gray-100 hover:border-sky-300';
+            
+            if (showFeedback !== null) {
+              if (isCorrectAnswer) {
+                btnClass = 'bg-green-500 text-white border-green-600 shadow-green-200';
+              } else if (isSelected && !showFeedback) {
+                btnClass = 'bg-red-400 text-white border-red-500 opacity-90';
+              } else {
+                btnClass = 'bg-white text-gray-300 border-gray-100 opacity-50';
+              }
+            }
+
+            return (
+              <button
+                key={opt}
+                onClick={() => handleAnswer(opt)}
+                disabled={showFeedback !== null}
+                className={`
+                  text-3xl font-bold py-8 rounded-[2rem] shadow-md transition-all transform active:scale-95
+                  ${btnClass}
+                `}
+              >
+                {opt}
+              </button>
+            );
+          })}
         </div>
       </div>
       
