@@ -9,6 +9,7 @@ import ResultView from './components/ResultView';
 import StatsView from './components/StatsView';
 import MultiplayerQuiz from './components/MultiplayerQuiz';
 import MultiplayerResult from './components/MultiplayerResult';
+import MultiplayerSetup from './components/MultiplayerSetup';
 
 const App: React.FC = () => {
   const [state, setState] = useState<GameState>(GameState.HOME);
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   const [selectedTable, setSelectedTable] = useState<number>(2);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const [multiResult, setMultiResult] = useState<MultiResultType | null>(null);
+  const [timeLimit, setTimeLimit] = useState<number>(0);
 
   const startLearning = (table: number, selectedMode: GameMode) => {
     setSelectedTable(table);
@@ -29,9 +31,14 @@ const App: React.FC = () => {
     setState(GameState.QUIZ);
   };
 
-  const startMultiplayer = (table: number, selectedMode: GameMode) => {
+  const setupMultiplayer = (table: number, selectedMode: GameMode) => {
     setSelectedTable(table);
     setMode(selectedMode);
+    setState(GameState.MULTIPLAYER_SETUP);
+  };
+
+  const startMultiplayer = (seconds: number) => {
+    setTimeLimit(seconds);
     setState(GameState.MULTIPLAYER_QUIZ);
   };
 
@@ -69,7 +76,7 @@ const App: React.FC = () => {
             <TableSelector 
               onSelectLearn={startLearning} 
               onSelectQuiz={startQuiz} 
-              onSelectMultiplayer={startMultiplayer} 
+              onSelectMultiplayer={setupMultiplayer} 
             />
           )}
 
@@ -91,10 +98,18 @@ const App: React.FC = () => {
             />
           )}
 
+          {state === GameState.MULTIPLAYER_SETUP && (
+            <MultiplayerSetup
+              onSelectTime={startMultiplayer}
+              onBack={goHome}
+            />
+          )}
+
           {state === GameState.MULTIPLAYER_QUIZ && (
             <MultiplayerQuiz
               table={selectedTable}
               mode={mode}
+              timeLimit={timeLimit}
               onFinish={finishMultiplayer}
               onQuit={goHome}
             />
@@ -115,7 +130,7 @@ const App: React.FC = () => {
               result={multiResult}
               table={selectedTable}
               mode={mode}
-              onRetry={() => startMultiplayer(selectedTable, mode)}
+              onRetry={() => setupMultiplayer(selectedTable, mode)}
               onHome={goHome}
             />
           )}
